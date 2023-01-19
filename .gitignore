@@ -1,2 +1,5 @@
-*.class
-*.log
+node_modules
+.idea/
+project/project
+**/target/
+/package-lock.json
