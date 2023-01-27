@@ -1,41 +1,29 @@
 import sbt.Keys._
 import sbt._
+import sbt.Keys.organizationName
 import com.typesafe.sbt.packager.Keys.maintainer
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
-
-import sbtbuildinfo.BuildInfoPlugin
-import sbtbuildinfo.BuildInfoPlugin.autoImport._
-import sbtbuildinfo.BuildInfoOption.ToJson
-import sbtbuildinfo.BuildInfoOption.ToMap
-import sbtbuildinfo.BuildInfoOption.BuildTime
-import java.util.Calendar
-
-
-import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.HeaderLicense
-import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.HeaderLicenseStyle
-import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.headerLicense
-import sbt.Keys.organizationName
-import sbt.Keys._
-import sbt._
-import sbt.io.Path.allSubpaths
-import scoverage.ScoverageKeys._
+import sbt.nio.Keys.{ReloadOnSourceChanges, onChangedBuildSource}
 import sbtdynver.DynVerPlugin.autoImport.dynverSeparator
 import sbtdynver.DynVerPlugin.autoImport.dynverSonatypeSnapshots
 import sbtdynver.DynVerPlugin.autoImport.dynverVTagPrefix
 
 object V {
 
+  val scalac = "3.2.0"
   val laminar = "0.14.5"
   val scalajsDom = "2.1.0"
+  val scalatest = "3.2.14"
 
 }
 
-
-
 object Deps {
 
-  // val laminar: ModuleID = "com.raquo" %%% "laminar" % V.laminar
+  val basicTestingDependencies: Seq[ModuleID] = Seq(
+    "org.scalatest" %% "scalatest" % V. scalatest % Test
+  )
+
 
   // lazy val scalajsDom = "org.scala-js" %%% "scalajs-dom" % V.scalajsDom
 
@@ -51,45 +39,27 @@ object Compile {
     p.settings(
       ThisBuild / maintainer := "reid@ossum.biz",
       ThisBuild / organization := "com.ossum",
-      ThisBuild / organizationHomepage :=
-        Some(new URL("https://ossuminc.com/")),
-      ThisBuild / organizationName := "Ossum Inc.",
+      // ThisBuild / organizationHomepage :=
+      //   Some(new URL("https://ossuminc.com/")),
+      // ThisBuild / organizationName := "Ossum Inc.",
       ThisBuild / startYear := Some(2023),
-      ThisBuild / licenses +=
+      /* ThisBuild / licenses +=
         (
           "Apache-2.0",
           new URL("https://www.apache.org/licenses/LICENSE-2.0.txt")
-        ),
+        ), */
       ThisBuild / versionScheme := Option("early-semver"),
       ThisBuild / dynverVTagPrefix := false,
       // NEVER  SET  THIS: version := "0.1"
       // IT IS HANDLED BY: sbt-dynver
-      ThisBuild / dynverSeparator := "-",
-      headerLicense := Some(HeaderLicense.ALv2(
-        startYear.value.get.toString,
-        "Ossum, Inc.",
-        HeaderLicenseStyle.SpdxSyntax
-      ))
+      ThisBuild / dynverSeparator := "-"
     )
   }
 
   def withScalaCompile(p: Project): Project = {
     p.configure(withInfo).settings(
-      scalaVersion := "2.13.10",
+      scalaVersion := V.scalac,
       scalacOptions := Seq("-deprecation", "-feature", "-Werror", "-explain")
-    )
-  }
-
-  def withCoverage(percent: Int = 50)(p: Project): Project = {
-    p.settings(
-      coverageFailOnMinimum := true,
-      coverageMinimumStmtTotal := percent,
-      coverageMinimumBranchTotal := percent,
-      coverageMinimumStmtPerPackage := percent,
-      coverageMinimumBranchPerPackage := percent,
-      coverageMinimumStmtPerFile := percent,
-      coverageMinimumBranchPerFile := percent,
-      coverageExcludedPackages := "<empty>"
     )
   }
 
@@ -136,11 +106,9 @@ object Compile {
   def scala(coveragePercent: Int = 1)(project: Project): Project = {
     project
       .configure(withScalaCompile)
-      .configure(withCoverage(coveragePercent))
       .configure(mavenPublish)
-      .configure(Utils.buildInfo("com.ossum.lamboot"))
       .settings (
-      )
+    )
   }
   def scalajs(project: Project): Project = {
     project
@@ -153,46 +121,6 @@ object Compile {
           "com.lihaoyi" %% "utest" % "0.4.5" % "test"
         ),
         testFrameworks += new TestFramework("utest.runner.Framework")
-      )
-  }
-}
-
-object Utils {
-  def buildInfo(pkg: String)(project: Project): Project = {
-    project
-      .enablePlugins(BuildInfoPlugin)
-      .settings(
-        buildInfoObject := "RiddlBuildInfo",
-        buildInfoPackage := pkg,
-        buildInfoOptions := Seq(ToMap, ToJson, BuildTime),
-        buildInfoUsePackageAsPath := true,
-        buildInfoKeys ++= Seq[BuildInfoKey](
-          name,
-          version,
-          description,
-          organization,
-          organizationName,
-          BuildInfoKey.map(organizationHomepage) { case (k, v) =>
-            k -> v.get.toString
-          },
-          BuildInfoKey.map(startYear) { case (k, v) =>
-            k -> v.map(_.toString).getOrElse("2023")
-          },
-          BuildInfoKey.map(startYear) { case (k, v) =>
-            "copyright" -> s"© ${v.map(_.toString).getOrElse("2023")}-${
-              Calendar
-                .getInstance().get(Calendar.YEAR)
-            } Ossum Inc."
-          },
-          scalaVersion,
-          sbtVersion,
-          BuildInfoKey.map(scalaVersion) { case (k, v) =>
-            "scalaCompatVersion" -> v.substring(0, v.lastIndexOf('.'))
-          },
-          BuildInfoKey.map(licenses) { case (k, v) =>
-            k -> v.map(_._1).mkString(", ")
-          }
-        )
       )
   }
 }
