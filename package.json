@@ -1,14 +1,12 @@
 {
   "name": "laminar-bootstrap",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Provides some utilities to help Laminar web projects utilize Bootstrap 5 more easily. The goals are to: * make the creation of templates and components very simple in Laminar * enable the consistent styling and function of websites * Demystifying bootstrap configuration and options *",
   "main": "index.js",
   "directories": {
     "example": "examples"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ossuminc/laminar-bootstrap.git"
@@ -21,6 +19,7 @@
   },
   "homepage": "https://github.com/ossuminc/laminar-bootstrap#readme",
   "dependencies": {
-    "bootstrap": "^5.2.3"
-  }
+    "jsdom": "^21.1.0"
+  },
+  "private": true
 }
